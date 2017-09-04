@@ -43,7 +43,7 @@ public class TestSchemaEvolution {
 
   @Rule
   public TestName testCaseName = new TestName();
-
+  
   Configuration conf;
   Path testFilePath;
   FileSystem fs;
@@ -465,5 +465,31 @@ public class TestSchemaEvolution {
     assertTrue(schemaEvolution.hasConversion());
     assertFalse(schemaEvolution.isPPDSafeConversion(0));
     assertFalse(schemaEvolution.isPPDSafeConversion(1));
+  }
+
+  @Test
+  public void testStructFieldChange() throws IOException {
+    TypeDescription nestedFileStruct1 = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createInt())
+        .addField("f3", TypeDescription.createDecimal().withPrecision(38).withScale(10));
+    TypeDescription fileStruct1 = TypeDescription.createStruct()
+        .addField("row1", nestedFileStruct1)
+        .addField("row2", TypeDescription.createInt());
+    TypeDescription nestedReaderStruct1 = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createInt())
+        .addField("f2", TypeDescription.createString())
+        .addField("f3", TypeDescription.createDecimal().withPrecision(38).withScale(10));
+    TypeDescription readerStruct1 = TypeDescription.createStruct()
+        .addField("row1", nestedReaderStruct1)
+        .addField("row2", TypeDescription.createInt());
+
+    SchemaEvolution both1 = new SchemaEvolution(fileStruct1, readerStruct1, null);
+    assertTrue(both1.hasConversion());
+
+    // one item per root row
+    boolean[] included2 = {true, true, true, true, true};
+    SchemaEvolution both2 = new SchemaEvolution(fileStruct1, readerStruct1, included2);
+    assertTrue(both2.hasConversion());
+    assertTrue(both2.isPPDSafeConversion(5));
   }
 }

@@ -191,8 +191,9 @@ public class SchemaEvolution {
 
   void buildConversionFileTypesArray(TypeDescription fileType,
                                      TypeDescription readerType) {
-    // if the column isn't included, don't map it
-    if (included != null && !included[readerType.getId()]) {
+    // if the column isn't included or missing, don't map it
+    if (included != null && readerType.getId() < included.length
+        && !included[readerType.getId()]) {
       return;
     }
     boolean isOk = true;
